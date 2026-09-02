@@ -29,6 +29,8 @@ const showHold = ref(false);
 const showCustomer = ref(false);
 const showCustomerPicker = ref(false);
 const showKas = ref(false);
+const showCart = ref(false);
+const showActions = ref(false);
 const discountItemId = ref(null);
 const now = ref(new Date());
 const cart = reactive([]);
@@ -84,7 +86,10 @@ onMounted(() => {
         loadHeld(props.heldSale);
     }
 
-    searchInput.value?.focus();
+    if (window.matchMedia('(min-width: 1024px)').matches) {
+        searchInput.value?.focus();
+    }
+
     clock = setInterval(() => {
         now.value = new Date();
     }, 1000);
@@ -493,6 +498,8 @@ function openPay() {
     payForm.reference_number = '';
     payForm.label = '';
     extraPayments.value = [];
+    showCart.value = false;
+    showActions.value = false;
     showPay.value = true;
 }
 
@@ -591,6 +598,7 @@ function checkout() {
 }
 
 function hold() {
+    showCart.value = false;
     router.post('/pos/hold', payload());
 }
 
@@ -642,67 +650,106 @@ const paymentMeta = {
 <template>
     <PosLayout>
         <Head title="Kasir" />
-        <div class="flex min-h-0 flex-1 flex-col">
-            <header class="flex items-center gap-4 border-b border-slate-200/80 bg-white px-5 py-3">
-                <div class="flex items-center gap-3">
-                    <BrandMark :src="storeLogo" />
-                    <div>
-                        <p class="text-sm font-semibold leading-tight">{{ storeName }}</p>
-                        <p class="text-xs text-slate-500">{{ clockLabel }} · Shift terbuka</p>
-                    </div>
-                </div>
-
-                <div class="relative mx-2 min-w-0 flex-1">
-                    <span class="pointer-events-none absolute inset-y-0 left-4 flex items-center text-slate-400">
-                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.3-4.3M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" />
-                        </svg>
-                    </span>
-                    <input
-                        ref="searchInput"
-                        v-model="search"
-                        placeholder="Scan barcode, cari nama, atau SKU lalu Enter"
-                        class="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 pl-12 pr-4 text-sm outline-none ring-teal-600/20 transition focus:border-teal-600 focus:bg-white focus:ring-4"
-                        @keydown.enter.prevent="onSearchEnter"
-                    >
-                </div>
-
-                <div class="flex items-center gap-2">
-                    <button
-                        class="relative rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium hover:bg-slate-50"
-                        @click="showHold = true"
-                    >
-                        Hold
-                        <span
-                            v-if="heldSales.length"
-                            class="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-amber-500 px-1 text-[10px] font-bold text-white"
-                        >
-                            {{ heldSales.length }}
-                        </span>
-                    </button>
-                    <button class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium hover:bg-slate-50" @click="showKas = true">
-                        Kas
-                    </button>
-                    <Link href="/shifts/close" class="rounded-xl bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-800">
-                        Tutup Shift
-                    </Link>
-                    <div class="ml-1 flex items-center gap-2 rounded-2xl bg-slate-100 py-1 pl-1 pr-3">
-                        <div class="flex h-8 w-8 items-center justify-center rounded-xl bg-white text-xs font-bold text-slate-700">
-                            {{ initial(user?.name) }}
+        <div class="flex min-h-0 flex-1 flex-col overflow-x-clip">
+            <header class="relative z-20 shrink-0 border-b border-slate-200/80 bg-white">
+                <div class="flex items-center gap-2 px-3 py-2.5 lg:gap-4 lg:px-5 lg:py-3">
+                    <div class="flex min-w-0 items-center gap-2 lg:gap-3">
+                        <BrandMark :src="storeLogo" class="hidden lg:block" />
+                        <BrandMark :src="storeLogo" size="sm" class="lg:hidden" />
+                        <div class="min-w-0">
+                            <p class="truncate text-sm font-semibold leading-tight">{{ storeName }}</p>
+                            <p class="truncate text-[11px] text-slate-500 lg:text-xs">{{ clockLabel }} · Shift terbuka</p>
                         </div>
-                        <div class="leading-tight">
-                            <p class="text-xs font-semibold">{{ user?.name }}</p>
-                            <div class="flex gap-2 text-[11px]">
-                                <Link v-if="user?.can_access_admin" href="/dashboard" target="_blank" rel="noopener" class="text-teal-700">Admin</Link>
-                                <Link href="/logout" method="post" as="button" class="text-slate-500">Keluar</Link>
+                    </div>
+
+                    <div class="relative mx-2 hidden min-w-0 flex-1 lg:block">
+                        <span class="pointer-events-none absolute inset-y-0 left-4 flex items-center text-slate-400">
+                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.3-4.3M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" />
+                            </svg>
+                        </span>
+                        <input
+                            ref="searchInput"
+                            v-model="search"
+                            placeholder="Scan barcode, cari nama, atau SKU lalu Enter"
+                            class="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 pl-12 pr-4 text-sm outline-none ring-teal-600/20 transition focus:border-teal-600 focus:bg-white focus:ring-4"
+                            @keydown.enter.prevent="onSearchEnter"
+                        >
+                    </div>
+
+                    <div class="ml-auto flex shrink-0 items-center gap-2">
+                        <button
+                            class="relative rounded-xl border border-slate-200 bg-white px-2.5 py-2 text-sm font-medium hover:bg-slate-50 lg:px-3"
+                            @click="showHold = true"
+                        >
+                            Hold
+                            <span
+                                v-if="heldSales.length"
+                                class="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-amber-500 px-1 text-[10px] font-bold text-white"
+                            >
+                                {{ heldSales.length }}
+                            </span>
+                        </button>
+                        <button class="hidden rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium hover:bg-slate-50 lg:inline-flex" @click="showKas = true">
+                            Kas
+                        </button>
+                        <Link href="/shifts/close" class="hidden rounded-xl bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-800 lg:inline-flex">
+                            Tutup Shift
+                        </Link>
+                        <div class="ml-1 hidden items-center gap-2 rounded-2xl bg-slate-100 py-1 pl-1 pr-3 lg:flex">
+                            <div class="flex h-8 w-8 items-center justify-center rounded-xl bg-white text-xs font-bold text-slate-700">
+                                {{ initial(user?.name) }}
+                            </div>
+                            <div class="leading-tight">
+                                <p class="text-xs font-semibold">{{ user?.name }}</p>
+                                <div class="flex gap-2 text-[11px]">
+                                    <Link v-if="user?.can_access_admin" href="/dashboard" target="_blank" rel="noopener" class="text-teal-700">Admin</Link>
+                                    <Link href="/logout" method="post" as="button" class="text-slate-500">Keluar</Link>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="relative lg:hidden">
+                            <button
+                                type="button"
+                                class="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white"
+                                aria-label="Menu kasir"
+                                @click="showActions = !showActions"
+                            >
+                                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                                    <path stroke-linecap="round" d="M12 6.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5Zm0 6a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5Zm0 6a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5Z" />
+                                </svg>
+                            </button>
+                            <div
+                                v-if="showActions"
+                                class="absolute right-0 top-12 z-20 w-48 rounded-2xl border border-slate-200 bg-white p-2 shadow-lg"
+                            >
+                                <button type="button" class="block w-full rounded-xl px-3 py-2 text-left text-sm hover:bg-slate-50" @click="showActions = false; showKas = true">Kas</button>
+                                <Link href="/shifts/close" class="block w-full rounded-xl px-3 py-2 text-left text-sm hover:bg-slate-50">Tutup Shift</Link>
+                                <Link v-if="user?.can_access_admin" href="/dashboard" target="_blank" rel="noopener" class="block w-full rounded-xl px-3 py-2 text-left text-sm hover:bg-slate-50">Admin</Link>
+                                <Link href="/logout" method="post" as="button" class="block w-full rounded-xl px-3 py-2 text-left text-sm text-rose-600 hover:bg-rose-50">Keluar</Link>
                             </div>
                         </div>
                     </div>
                 </div>
+                <div class="px-3 pb-3 lg:hidden">
+                    <div class="relative">
+                        <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-400">
+                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.3-4.3M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" />
+                            </svg>
+                        </span>
+                        <input
+                            v-model="search"
+                            placeholder="Scan / cari produk"
+                            class="h-11 w-full rounded-2xl border border-slate-200 bg-slate-50 pl-10 pr-4 text-sm outline-none ring-teal-600/20 transition focus:border-teal-600 focus:bg-white focus:ring-4"
+                            @keydown.enter.prevent="onSearchEnter"
+                        >
+                    </div>
+                </div>
             </header>
 
-            <div class="grid min-h-0 flex-1 grid-cols-[minmax(0,1.7fr)_420px] gap-4 p-4">
-                <section class="flex min-h-0 flex-col">
+            <div class="flex min-h-0 flex-1 overflow-hidden">
+                <section class="flex min-h-0 min-w-0 flex-1 flex-col px-3 pt-2 pb-[5.75rem] lg:p-4">
                     <div class="flex gap-2 overflow-x-auto pb-3">
                         <button
                             class="shrink-0 rounded-full px-4 py-2 text-sm font-medium transition"
@@ -722,17 +769,17 @@ const paymentMeta = {
                         </button>
                     </div>
 
-                    <div class="pos-scroll grid min-h-0 flex-1 auto-rows-min grid-cols-2 gap-3 overflow-y-auto pr-1 md:grid-cols-3 xl:grid-cols-4">
+                    <div class="pos-scroll grid min-h-0 flex-1 auto-rows-min grid-cols-2 gap-2 overflow-y-auto pr-0.5 sm:gap-3 md:grid-cols-3 xl:grid-cols-4">
                         <button
                             v-for="product in filteredProducts"
                             :key="product.id"
-                            class="group relative rounded-3xl border border-white bg-white p-4 text-left shadow-[0_8px_30px_rgb(15,23,42,0.04)] transition hover:-translate-y-0.5 hover:shadow-[0_16px_40px_rgb(15,23,42,0.08)] disabled:cursor-not-allowed disabled:opacity-50"
+                            class="group relative flex h-full flex-col rounded-2xl border border-white bg-white p-3 text-left shadow-[0_8px_30px_rgb(15,23,42,0.04)] transition hover:-translate-y-0.5 hover:shadow-[0_16px_40px_rgb(15,23,42,0.08)] disabled:cursor-not-allowed disabled:opacity-50 sm:rounded-3xl sm:p-4"
                             :disabled="!settings.allow_negative_stock && Number(product.stock) <= 0"
                             @click="addProduct(product)"
                         >
                             <span
                                 v-if="qtyInCart(product.id)"
-                                class="absolute right-3 top-3 rounded-full bg-teal-600 px-2 py-0.5 text-[11px] font-bold text-white"
+                                class="absolute right-2 top-2 rounded-full bg-teal-600 px-2 py-0.5 text-[11px] font-bold text-white sm:right-3 sm:top-3"
                             >
                                 {{ qtyInCart(product.id) }}
                             </span>
@@ -740,16 +787,16 @@ const paymentMeta = {
                                 v-if="product.image"
                                 :src="`/storage/${product.image}`"
                                 :alt="product.name"
-                                class="h-12 w-12 rounded-2xl object-cover"
+                                class="h-10 w-10 rounded-2xl object-cover sm:h-12 sm:w-12"
                             >
-                            <div v-else class="flex h-12 w-12 items-center justify-center rounded-2xl text-lg font-bold" :class="productTone(product.name)">
+                            <div v-else class="flex h-10 w-10 items-center justify-center rounded-2xl text-base font-bold sm:h-12 sm:w-12 sm:text-lg" :class="productTone(product.name)">
                                 {{ initial(product.name) }}
                             </div>
-                            <p class="mt-3 line-clamp-2 min-h-10 text-sm font-semibold leading-5">{{ product.name }}</p>
-                            <p class="mt-1 text-xs text-slate-400">{{ product.sku }}</p>
-                            <div class="mt-4 flex items-end justify-between">
-                                <p class="text-base font-bold text-slate-900">{{ formatRupiah(product.selling_price) }}</p>
-                                <p class="text-[11px]" :class="Number(product.stock) <= 5 ? 'font-semibold text-amber-600' : 'text-slate-400'">
+                            <p class="mt-2 line-clamp-2 min-h-9 text-sm font-semibold leading-5 sm:mt-3 sm:min-h-10">{{ product.name }}</p>
+                            <p class="mt-1 truncate text-xs text-slate-400">{{ product.sku }}</p>
+                            <div class="mt-auto flex items-end justify-between gap-1 pt-3 sm:pt-4">
+                                <p class="truncate text-sm font-bold text-slate-900 sm:text-base">{{ formatRupiah(product.selling_price) }}</p>
+                                <p class="shrink-0 text-[11px]" :class="Number(product.stock) <= 5 ? 'font-semibold text-amber-600' : 'text-slate-400'">
                                     Stok {{ product.stock }}
                                 </p>
                             </div>
@@ -762,16 +809,38 @@ const paymentMeta = {
                     </div>
                 </section>
 
-                <aside class="flex min-h-0 flex-col overflow-hidden rounded-[28px] bg-white shadow-[0_20px_60px_rgb(15,23,42,0.08)]">
-                    <div class="border-b border-slate-100 px-5 py-4">
+                <div
+                    v-if="showCart"
+                    class="fixed inset-0 z-20 bg-slate-950/50 lg:hidden"
+                    @click="showCart = false"
+                />
+
+                <aside
+                    class="flex min-h-0 flex-col overflow-hidden bg-white shadow-[0_20px_60px_rgb(15,23,42,0.08)] max-lg:fixed max-lg:inset-x-0 max-lg:bottom-0 max-lg:z-30 max-lg:max-h-[min(92dvh,100%)] max-lg:rounded-t-[28px] lg:my-4 lg:mr-4 lg:w-[420px] lg:shrink-0 lg:rounded-[28px]"
+                    :class="showCart ? 'max-lg:flex' : 'max-lg:hidden'"
+                >
+                    <div class="border-b border-slate-100 px-4 py-3 sm:px-5 sm:py-4">
+                        <div class="mx-auto mb-3 h-1 w-10 rounded-full bg-slate-200 lg:hidden" />
                         <div class="flex items-center justify-between gap-3">
                             <div>
                                 <p class="text-sm font-semibold">Pesanan</p>
                                 <p class="text-xs text-slate-400">{{ itemCount }} item</p>
                             </div>
-                            <button class="rounded-xl bg-slate-900 px-3 py-2 text-xs font-semibold text-white" @click="openNewCustomer">
-                                Baru
-                            </button>
+                            <div class="flex items-center gap-2">
+                                <button class="rounded-xl bg-slate-900 px-3 py-2 text-xs font-semibold text-white" @click="openNewCustomer">
+                                    Baru
+                                </button>
+                                <button
+                                    type="button"
+                                    class="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 text-slate-500 lg:hidden"
+                                    aria-label="Tutup pesanan"
+                                    @click="showCart = false"
+                                >
+                                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
                         </div>
                         <button
                             type="button"
@@ -869,9 +938,9 @@ const paymentMeta = {
                                 <span>Saldo poin</span>
                                 <span>{{ formatRupiah(selectedCustomer.points ?? 0) }}{{ earnedPoints > 0 ? ` · +${formatRupiah(earnedPoints)}` : '' }}</span>
                             </div>
-                            <div class="flex items-end justify-between pt-2">
-                                <span class="text-sm font-medium">Total</span>
-                                <span class="text-2xl font-bold tracking-tight">{{ formatRupiah(grandTotal) }}</span>
+                            <div class="flex items-end justify-between gap-3 pt-2">
+                                <span class="shrink-0 text-sm font-medium">Total</span>
+                                <span class="min-w-0 truncate text-right text-xl font-bold tracking-tight sm:text-2xl">{{ formatRupiah(grandTotal) }}</span>
                             </div>
                         </div>
                         <div class="mt-4 grid grid-cols-[1fr_1.6fr] gap-2">
@@ -893,14 +962,40 @@ const paymentMeta = {
                     </div>
                 </aside>
             </div>
+
+            <div v-if="showActions" class="fixed inset-0 z-10 lg:hidden" @click="showActions = false" />
+
+            <div
+                v-show="!showCart"
+                class="fixed inset-x-0 bottom-0 z-20 border-t border-slate-200 bg-white px-3 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] lg:hidden"
+            >
+                <div class="grid grid-cols-[1.35fr_1fr] gap-2">
+                    <button
+                        type="button"
+                        class="flex min-w-0 items-center justify-between gap-2 rounded-2xl bg-slate-900 px-4 py-3.5 text-left text-white"
+                        @click="showCart = true"
+                    >
+                        <span class="text-sm font-medium">{{ itemCount }} item</span>
+                        <span class="truncate text-sm font-bold tabular-nums">{{ formatRupiah(grandTotal) }}</span>
+                    </button>
+                    <button
+                        type="button"
+                        class="rounded-2xl bg-teal-600 py-3.5 text-sm font-semibold text-white shadow-lg shadow-teal-600/20 disabled:opacity-40"
+                        :disabled="!cart.length"
+                        @click="openPay"
+                    >
+                        Bayar
+                    </button>
+                </div>
+            </div>
         </div>
 
-        <div v-if="showPay" class="fixed inset-0 z-30 flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-sm">
-            <form class="w-full max-w-lg rounded-[28px] bg-white p-6 shadow-2xl" @submit.prevent="checkout">
-                <div class="flex items-start justify-between">
-                    <div>
+        <div v-if="showPay" class="fixed inset-0 z-40 flex items-end justify-center bg-slate-950/50 p-0 backdrop-blur-sm sm:items-center sm:p-4">
+            <form class="pos-scroll max-h-[92dvh] w-full max-w-lg overflow-y-auto rounded-t-[28px] bg-white p-5 shadow-2xl sm:rounded-[28px] sm:p-6" @submit.prevent="checkout">
+                <div class="flex items-start justify-between gap-3">
+                    <div class="min-w-0">
                         <p class="text-sm text-slate-500">Total tagihan</p>
-                        <p class="mt-1 text-3xl font-bold tracking-tight">{{ formatRupiah(payableTotal) }}</p>
+                        <p class="mt-1 break-words text-2xl font-bold tracking-tight sm:text-3xl">{{ formatRupiah(payableTotal) }}</p>
                         <p class="mt-2 text-sm font-medium text-slate-700">{{ customerDisplayName(selectedCustomer) }}</p>
                         <p v-if="selectedCustomer && !selectedCustomer.is_walk_in" class="text-xs text-slate-500">
                             {{ selectedCustomer.phone || 'Tanpa telepon' }} · saldo {{ formatRupiah(selectedCustomer.points ?? 0) }}
@@ -987,7 +1082,7 @@ const paymentMeta = {
                         </p>
                     </div>
                     <button type="button" class="text-left text-sm font-medium text-teal-700" @click="addSplit">+ Split payment</button>
-                    <div v-for="(row, index) in extraPayments" :key="index" class="grid grid-cols-[1fr_110px_auto] gap-2">
+                    <div v-for="(row, index) in extraPayments" :key="index" class="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_110px_auto]">
                         <select v-model="row.method" class="h-11 rounded-2xl border border-slate-200 px-3 text-sm">
                             <option v-for="method in paymentMethods" :key="method.value" :value="method.value">{{ method.label }}</option>
                         </select>
@@ -1007,8 +1102,8 @@ const paymentMeta = {
             </form>
         </div>
 
-        <div v-if="showHold" class="fixed inset-0 z-30 flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-sm">
-            <div class="w-full max-w-lg rounded-[28px] bg-white p-6">
+        <div v-if="showHold" class="fixed inset-0 z-40 flex items-end justify-center bg-slate-950/50 p-0 backdrop-blur-sm sm:items-center sm:p-4">
+            <div class="max-h-[92dvh] w-full max-w-lg overflow-y-auto rounded-t-[28px] bg-white p-5 sm:rounded-[28px] sm:p-6">
                 <div class="flex items-center justify-between">
                     <h2 class="text-lg font-semibold">Transaksi tertahan</h2>
                     <button class="text-slate-400" @click="showHold = false">Tutup</button>
@@ -1017,7 +1112,7 @@ const paymentMeta = {
                     <div
                         v-for="sale in heldSales"
                         :key="sale.id"
-                        class="flex items-center justify-between rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3"
+                        class="flex flex-col gap-3 rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
                     >
                         <button class="text-left" @click="resume(sale)">
                             <p class="text-sm font-semibold">{{ sale.customer?.is_walk_in ? 'Pelanggan umum' : sale.customer?.name }}</p>
@@ -1040,8 +1135,8 @@ const paymentMeta = {
             </div>
         </div>
 
-        <div v-if="showCustomerPicker" class="fixed inset-0 z-30 flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-sm">
-            <div class="flex max-h-[80vh] w-full max-w-md flex-col rounded-[28px] bg-white p-6">
+        <div v-if="showCustomerPicker" class="fixed inset-0 z-40 flex items-end justify-center bg-slate-950/50 p-0 backdrop-blur-sm sm:items-center sm:p-4">
+            <div class="flex max-h-[92dvh] w-full max-w-md flex-col rounded-t-[28px] bg-white p-5 sm:rounded-[28px] sm:p-6">
                 <div class="flex items-start justify-between gap-3">
                     <div>
                         <h2 class="text-lg font-semibold">Pilih pelanggan</h2>
@@ -1091,8 +1186,8 @@ const paymentMeta = {
             </div>
         </div>
 
-        <div v-if="showKas" class="fixed inset-0 z-30 flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-sm">
-            <form class="w-full max-w-md rounded-[28px] bg-white p-6" @submit.prevent="submitKas">
+        <div v-if="showKas" class="fixed inset-0 z-40 flex items-end justify-center bg-slate-950/50 p-0 backdrop-blur-sm sm:items-center sm:p-4">
+            <form class="w-full max-w-md rounded-t-[28px] bg-white p-5 sm:rounded-[28px] sm:p-6" @submit.prevent="submitKas">
                 <h2 class="text-lg font-semibold">Kas masuk / keluar</h2>
                 <div class="mt-4 grid grid-cols-2 gap-2">
                     <button type="button" class="rounded-2xl border py-3 text-sm font-medium" :class="kasForm.type === 'in' ? 'border-teal-600 bg-teal-50' : 'border-slate-200'" @click="kasForm.type = 'in'">Kas masuk</button>
@@ -1107,8 +1202,8 @@ const paymentMeta = {
             </form>
         </div>
 
-        <div v-if="showCustomer" class="fixed inset-0 z-40 flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-sm">
-            <form class="w-full max-w-md rounded-[28px] bg-white p-6" @submit.prevent="addCustomer">
+        <div v-if="showCustomer" class="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/50 p-0 backdrop-blur-sm sm:items-center sm:p-4">
+            <form class="w-full max-w-md rounded-t-[28px] bg-white p-5 sm:rounded-[28px] sm:p-6" @submit.prevent="addCustomer">
                 <h2 class="text-lg font-semibold">Pelanggan baru</h2>
                 <input v-model="customerForm.name" placeholder="Nama" class="mt-4 h-12 w-full rounded-2xl border border-slate-200 px-4" required>
                 <input v-model="customerForm.phone" placeholder="Telepon" class="mt-3 h-12 w-full rounded-2xl border border-slate-200 px-4">

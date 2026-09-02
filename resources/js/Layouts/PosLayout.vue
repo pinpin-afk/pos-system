@@ -8,7 +8,7 @@ const error = computed(() => page.props.flash?.error);
 </script>
 
 <template>
-    <div class="flex h-screen flex-col overflow-hidden bg-[#f3f5f8] text-slate-900">
+    <div class="flex h-dvh max-h-dvh flex-col overflow-hidden bg-[#f3f5f8] text-slate-900">
         <div v-if="success || error" class="pointer-events-none absolute inset-x-0 top-5 z-40 flex justify-center px-4">
             <div
                 class="pointer-events-auto rounded-2xl px-4 py-3 text-sm font-medium shadow-lg"

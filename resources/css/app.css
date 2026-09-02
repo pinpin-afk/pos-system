@@ -89,6 +89,7 @@ html.dark {
 
     .admin-card {
         background: var(--admin-surface);
+        min-width: 0;
         @apply rounded-[28px] shadow-[0_16px_40px_rgb(15,23,42,0.04)] dark:shadow-none dark:ring-1 dark:ring-white/10;
     }
 

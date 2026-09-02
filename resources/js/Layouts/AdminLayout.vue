@@ -1,6 +1,6 @@
 <script setup>
 import { Link, router, usePage } from '@inertiajs/vue3';
-import { computed, onMounted, onUnmounted, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import BrandMark from '@/Components/BrandMark.vue';
 import FlashMessage from '@/Components/FlashMessage.vue';
 import SidebarIcon from '@/Components/SidebarIcon.vue';
@@ -73,10 +73,34 @@ function initial(name) {
     return String(name || 'A').trim().charAt(0).toUpperCase();
 }
 
+const sidebarOpen = ref(false);
 const showNotes = ref(false);
 const notifications = computed(() => page.props.notifications ?? []);
 const branches = computed(() => page.props.location?.branches ?? []);
 const currentBranch = computed(() => page.props.location?.branch);
+
+function closeSidebar() {
+    sidebarOpen.value = false;
+}
+
+function toggleSidebar() {
+    sidebarOpen.value = !sidebarOpen.value;
+}
+
+function onKeydown(event) {
+    if (event.key === 'Escape') {
+        closeSidebar();
+    }
+}
+
+watch(() => page.url, closeSidebar);
+
+watch(sidebarOpen, (open) => {
+    document.body.classList.toggle('overflow-hidden', open);
+    if (!open) {
+        showNotes.value = false;
+    }
+});
 
 function switchBranch(event) {
     const id = Number(event.target.value);
@@ -95,12 +119,16 @@ function markRead(id) {
 let poll = null;
 
 onMounted(() => {
+    window.addEventListener('keydown', onKeydown);
     poll = setInterval(() => {
         router.reload({ only: ['notifications'], preserveScroll: true, preserveState: true });
     }, 30000);
 });
 
 onUnmounted(() => {
+    window.removeEventListener('keydown', onKeydown);
+    document.body.classList.remove('overflow-hidden');
+
     if (poll) {
         clearInterval(poll);
     }
@@ -108,15 +136,60 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div class="admin-shell min-h-screen bg-[var(--admin-canvas)] text-[var(--admin-text)]">
+    <div class="admin-shell min-h-screen overflow-x-clip bg-[var(--admin-canvas)] text-[var(--admin-text)]">
         <FlashMessage />
-        <aside class="fixed inset-y-0 left-0 flex w-[260px] flex-col border-r border-slate-200/80 bg-white dark:border-white/10 dark:bg-[#121a2b]">
+
+        <header class="sticky top-0 z-30 flex items-center gap-3 border-b border-slate-200/80 bg-white/95 px-4 py-3 pt-[max(0.75rem,env(safe-area-inset-top))] backdrop-blur xl:hidden dark:border-white/10 dark:bg-[#121a2b]/95">
+            <button
+                type="button"
+                class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-50 text-slate-700 dark:bg-white/5 dark:text-slate-200"
+                aria-label="Buka menu"
+                :aria-expanded="sidebarOpen"
+                @click="toggleSidebar"
+            >
+                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 7h16M4 12h16M4 17h16" />
+                </svg>
+            </button>
+            <BrandMark :src="logo" size="sm" />
+            <div class="min-w-0 flex-1">
+                <p class="truncate text-sm font-semibold">{{ storeName }}</p>
+                <p class="truncate text-[11px] text-slate-400">{{ currentBranch?.name ?? 'Admin' }}</p>
+            </div>
+            <span
+                v-if="notifications.length"
+                class="rounded-full bg-amber-500 px-2 py-0.5 text-[11px] font-bold text-white"
+            >
+                {{ notifications.length }}
+            </span>
+        </header>
+
+        <div
+            v-if="sidebarOpen"
+            class="fixed inset-0 z-40 bg-slate-950/55 xl:hidden"
+            @click="closeSidebar"
+        />
+
+        <aside
+            class="fixed inset-y-0 left-0 z-50 flex w-[min(260px,88vw)] flex-col border-r border-slate-200/80 bg-white transition-transform duration-200 dark:border-white/10 dark:bg-[#121a2b] xl:translate-x-0"
+            :class="sidebarOpen ? 'translate-x-0' : 'max-xl:-translate-x-full'"
+        >
             <div class="flex items-center gap-3 px-5 py-5">
                 <BrandMark :src="logo" />
-                <div class="min-w-0">
+                <div class="min-w-0 flex-1">
                     <p class="truncate text-sm font-semibold">{{ storeName }}</p>
                     <p class="text-[11px] text-slate-400">Admin dashboard</p>
                 </div>
+                <button
+                    type="button"
+                    class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-50 text-slate-500 xl:hidden dark:bg-white/5 dark:text-slate-300"
+                    aria-label="Tutup menu"
+                    @click="closeSidebar"
+                >
+                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                    </svg>
+                </button>
             </div>
 
             <nav class="pos-scroll flex-1 space-y-5 overflow-y-auto px-3 pb-4">
@@ -194,7 +267,7 @@ onUnmounted(() => {
             </div>
         </aside>
 
-        <main class="ml-[260px] min-h-screen p-8">
+        <main class="min-h-screen px-4 py-5 sm:px-6 sm:py-6 xl:ml-[260px] xl:p-8">
             <slot />
         </main>
     </div>
