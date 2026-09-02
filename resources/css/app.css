@@ -1,0 +1,176 @@
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../**/*.vue';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+        'Segoe UI Symbol', 'Noto Color Emoji';
+    --color-brand: #0f766e;
+    --color-brand-dark: #115e59;
+}
+
+:root {
+    --admin-canvas: #f3f5f8;
+    --admin-surface: #ffffff;
+    --admin-surface-muted: #f8fafc;
+    --admin-border: #e2e8f0;
+    --admin-text: #0f172a;
+    --admin-muted: #64748b;
+}
+
+html.dark {
+    --admin-canvas: #0b1220;
+    --admin-surface: #121a2b;
+    --admin-surface-muted: #1a2436;
+    --admin-border: #243049;
+    --admin-text: #e8eef7;
+    --admin-muted: #94a3b8;
+    color-scheme: dark;
+}
+
+@layer base {
+    button {
+        cursor: pointer;
+    }
+}
+
+@layer components {
+    .admin-table {
+        @apply w-full text-left text-sm;
+    }
+
+    .admin-table thead tr {
+        @apply border-b border-slate-100 dark:border-white/10;
+    }
+
+    .admin-table thead th {
+        @apply px-5 py-3.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400 first:pl-6 last:pr-6;
+    }
+
+    .admin-table tbody tr {
+        @apply border-b border-slate-50 last:border-0 transition-colors hover:bg-slate-50/80 dark:border-white/5 dark:hover:bg-white/5;
+    }
+
+    .admin-table tbody td {
+        @apply px-5 py-4 align-middle text-slate-600 first:pl-6 last:pr-6 dark:text-slate-300;
+    }
+
+    .admin-table-compact thead th {
+        @apply py-2.5;
+    }
+
+    .admin-table-compact tbody td {
+        @apply py-2.5;
+    }
+
+    .btn-primary {
+        @apply inline-flex items-center justify-center rounded-2xl bg-teal-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-teal-600/20 transition hover:bg-teal-700;
+    }
+
+    .btn-secondary {
+        @apply inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 dark:border-white/10 dark:bg-white/5 dark:text-slate-200 dark:hover:bg-white/10;
+    }
+
+    .btn-ghost {
+        @apply inline-flex items-center justify-center rounded-xl px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-white/10;
+    }
+
+    .btn-danger {
+        @apply inline-flex items-center justify-center rounded-xl px-3 py-1.5 text-xs font-semibold text-rose-600 transition hover:bg-rose-50 dark:hover:bg-rose-500/10;
+    }
+
+    .input-soft {
+        @apply rounded-2xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-teal-300 focus:bg-white focus:ring-4 focus:ring-teal-500/10 dark:border-white/10 dark:bg-white/5 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:bg-[#1a2436];
+    }
+
+    .admin-card {
+        background: var(--admin-surface);
+        @apply rounded-[28px] shadow-[0_16px_40px_rgb(15,23,42,0.04)] dark:shadow-none dark:ring-1 dark:ring-white/10;
+    }
+
+    .auth-shell {
+        @apply bg-[#f3f5f8] text-slate-900;
+    }
+
+    .auth-shell h1,
+    .auth-shell h2 {
+        @apply text-slate-900;
+    }
+
+    .auth-shell label,
+    .auth-shell .auth-copy {
+        @apply text-slate-600;
+    }
+
+    .auth-shell .auth-muted {
+        @apply text-slate-500;
+    }
+
+    .auth-shell .auth-eyebrow {
+        @apply text-teal-700;
+    }
+
+    .auth-shell .input-soft {
+        @apply border-slate-200 bg-slate-50 text-slate-900 placeholder:text-slate-400 focus:bg-white;
+    }
+}
+
+html.dark .admin-shell .bg-white {
+    background-color: var(--admin-surface);
+}
+
+html.dark .admin-shell .bg-slate-50 {
+    background-color: var(--admin-surface-muted);
+}
+
+html.dark .admin-shell .text-slate-900 {
+    color: var(--admin-text);
+}
+
+html.dark .admin-shell .border-slate-100,
+html.dark .admin-shell .border-slate-200,
+html.dark .admin-shell .border-slate-200\/80,
+html.dark .admin-shell .border-slate-300 {
+    border-color: var(--admin-border);
+}
+
+html.dark .auth-shell,
+html.dark .auth-shell h1,
+html.dark .auth-shell h2,
+html.dark .auth-shell label {
+    color: #0f172a;
+}
+
+html.dark .auth-shell {
+    background: #f3f5f8;
+}
+
+@layer utilities {
+    .pos-scroll {
+        scrollbar-width: thin;
+        scrollbar-color: #cbd5e1 transparent;
+    }
+}
+
+@media print {
+    body * {
+        visibility: hidden;
+    }
+
+    .receipt-paper,
+    .receipt-paper * {
+        visibility: visible;
+    }
+
+    .receipt-paper {
+        position: absolute;
+        inset: 0;
+        width: 80mm;
+        margin: 0 auto;
+        box-shadow: none;
+    }
+}
